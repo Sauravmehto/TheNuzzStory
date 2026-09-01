@@ -222,7 +222,7 @@ function CategoryPage() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-full px-3 py-5 sm:px-4 sm:py-8">
       <nav className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-label="Breadcrumb">
         <Link to="/" className="hover:text-primary">
           Home
