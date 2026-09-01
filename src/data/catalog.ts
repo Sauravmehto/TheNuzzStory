@@ -4,6 +4,16 @@ import groomingImg from "@/assets/p-grooming.jpg";
 import toysImg from "@/assets/p-toys.jpg";
 import accessoriesImg from "@/assets/p-accessories.jpg";
 import healthImg from "@/assets/p-health.jpg";
+import {
+  BED_PRODUCTS,
+  DEHYDRATED_PRODUCTS,
+  KRUNCH_PRODUCTS,
+  MEAL_BOOSTER_PRODUCTS,
+  PEANUT_BUTTER_PRODUCTS,
+  PRODUCT_GALLERIES,
+  PRODUCT_IMAGE_FILES,
+  TSHIRT_PRODUCTS,
+} from "@/data/product-assets";
 
 export type Pet = "dog" | "cat";
 
@@ -14,7 +24,9 @@ export type CategorySlug =
   | "cat-grooming"
   | "toys"
   | "accessories"
-  | "healthcare";
+  | "healthcare"
+  | "beds"
+  | "tshirt";
 
 export interface Category {
   slug: CategorySlug;
@@ -37,6 +49,8 @@ export interface Product {
   rating: number;
   reviews: number;
   image: string;
+  /** Optional gallery — card uses `image` (usually the `_both` pack shot). */
+  images?: string[];
   variants: { label: string; priceDelta: number }[];
   inStock: boolean;
   isNew: boolean;
@@ -56,6 +70,8 @@ export const CATEGORY_IMAGES: Record<CategorySlug, string> = {
   toys: toysImg,
   accessories: accessoriesImg,
   healthcare: healthImg,
+  beds: BED_PRODUCTS[0]?.front ?? accessoriesImg,
+  tshirt: TSHIRT_PRODUCTS[0]?.front ?? accessoriesImg,
 };
 
 const LOCAL_ASSETS: Record<string, string> = {
@@ -65,14 +81,32 @@ const LOCAL_ASSETS: Record<string, string> = {
   "p-toys.jpg": toysImg,
   "p-accessories.jpg": accessoriesImg,
   "p-health.jpg": healthImg,
+  ...PRODUCT_IMAGE_FILES,
 };
 
-/** Map Vite-dev paths stored in the DB (`/src/assets/p-dogfood.jpg`) to bundled URLs. */
+/** Map Vite-dev paths / filenames stored in the DB to bundled URLs. */
 export function resolveCatalogImage(url: string, category?: CategorySlug): string {
   if (!url) return category ? CATEGORY_IMAGES[category] : dogFoodImg;
-  if (/^https?:\/\//.test(url) || url.startsWith("/assets/")) return url;
-  const filename = url.split("/").pop()?.split("?")[0] ?? "";
+  // Already a usable URL (CDN, Vite prod `/assets/…`, Vite dev `/src/…`, or data URI)
+  if (
+    /^https?:\/\//.test(url) ||
+    url.startsWith("/assets/") ||
+    url.startsWith("/src/") ||
+    url.startsWith("data:")
+  ) {
+    return url;
+  }
+  const rawName = url.split("/").pop()?.split("?")[0] ?? "";
+  const filename = (() => {
+    try {
+      return decodeURIComponent(rawName);
+    } catch {
+      return rawName;
+    }
+  })();
   if (LOCAL_ASSETS[filename]) return LOCAL_ASSETS[filename];
+  if (LOCAL_ASSETS[rawName]) return LOCAL_ASSETS[rawName];
+  if (PRODUCT_GALLERIES[url]?.[0]) return PRODUCT_GALLERIES[url]![0]!;
   return category ? CATEGORY_IMAGES[category] : url;
 }
 
@@ -80,14 +114,14 @@ export const categories: Category[] = [
   {
     slug: "dog-food",
     name: "Dog Food",
-    blurb: "Dry, wet & treats",
+    blurb: "Dehydrated, Krunch, meal boosters & peanut butter",
     image: dogFoodImg,
     pet: "dog",
   },
   {
     slug: "cat-food",
     name: "Cat Food",
-    blurb: "Kibble, gravy & pâté",
+    blurb: "Dehydrated, Krunch & meal boosters",
     image: catFoodImg,
     pet: "cat",
   },
@@ -109,8 +143,22 @@ export const categories: Category[] = [
   {
     slug: "accessories",
     name: "Accessories",
-    blurb: "Collars, bowls & beds",
+    blurb: "Collars, bowls & more",
     image: accessoriesImg,
+    pet: "both",
+  },
+  {
+    slug: "beds",
+    name: "Beds",
+    blurb: "Cozy beds & mats",
+    image: BED_PRODUCTS[0]?.front ?? accessoriesImg,
+    pet: "both",
+  },
+  {
+    slug: "tshirt",
+    name: "T-Shirts",
+    blurb: "Pet apparel & tees",
+    image: TSHIRT_PRODUCTS[0]?.front ?? accessoriesImg,
     pet: "both",
   },
   {
@@ -151,20 +199,24 @@ type Seed = [
 ];
 
 const seeds: Seed[] = [
-  ["Chicken & Rice Adult Dry Food", "Barkwell", "dog", "dog-food", "Dry Food", 1249, 1599, 4.6, 412],
-  ["Grain-Free Salmon Kibble", "Nutrikind", "dog", "dog-food", "Dry Food", 1899, 2450, 4.8, 268],
-  ["Puppy Starter Chicken Chunks", "Barkwell", "dog", "dog-food", "Wet Food", 899, 1150, 4.4, 195],
-  ["Lamb & Pumpkin Wet Gravy", "Feastly", "dog", "dog-food", "Wet Food", 649, 799, 4.3, 143],
-  ["Chicken Jerky Training Treats", "Snoutly", "dog", "dog-food", "Treats", 399, 549, 4.7, 620],
-  ["Senior Joint-Care Dry Food", "Nutrikind", "dog", "dog-food", "Dry Food", 1749, 2199, 4.5, 187],
-  ["Peanut Butter Biscuit Bites", "Snoutly", "dog", "dog-food", "Treats", 299, 399, 4.2, 331],
-  ["High-Protein Ocean Fish Kibble", "Feastly", "dog", "dog-food", "Dry Food", 1549, 1999, 4.6, 221],
-  ["Tuna & Salmon Adult Dry Food", "Whiskerly", "cat", "cat-food", "Dry Food", 1099, 1399, 4.7, 356],
-  ["Kitten Chicken Mousse Pack", "Whiskerly", "cat", "cat-food", "Wet Food", 749, 949, 4.5, 208],
-  ["Hairball Control Kibble", "Purrfect Co", "cat", "cat-food", "Dry Food", 1299, 1699, 4.4, 176],
-  ["Ocean Fish Gravy Pouches", "Feastly", "cat", "cat-food", "Wet Food", 599, 799, 4.3, 264],
-  ["Freeze-Dried Chicken Treats", "Purrfect Co", "cat", "cat-food", "Treats", 449, 599, 4.8, 402],
-  ["Indoor Weight-Care Formula", "Whiskerly", "cat", "cat-food", "Dry Food", 1399, 1799, 4.2, 121],
+  // Dog food real packs come from product-assets (dehydrated, krunch, meal booster, peanut butter)
+  // Cat food — The Nuzz Story in-house demos
+  ["Tuna Dehydrated Flakes", "The Nuzz Story", "cat", "cat-food", "Dehydrated", 449, 599, 4.7, 92],
+  ["Chicken Dehydrated Cubes Cat", "The Nuzz Story", "cat", "cat-food", "Dehydrated", 429, 569, 4.6, 78],
+  ["Salmon Dehydrated Strips", "The Nuzz Story", "cat", "cat-food", "Dehydrated", 499, 649, 4.8, 110],
+  ["Liver Dehydrated Cat Treats", "The Nuzz Story", "cat", "cat-food", "Dehydrated", 399, 529, 4.5, 66],
+  ["Fish Mix Dehydrated Pack", "The Nuzz Story", "cat", "cat-food", "Dehydrated", 529, 699, 4.4, 54],
+  ["Chicken & Pumpkin Dehydrated Cat", "The Nuzz Story", "cat", "cat-food", "Dehydrated", 469, 619, 4.6, 61],
+  ["White Fish Dehydrated Bites", "The Nuzz Story", "cat", "cat-food", "Dehydrated", 479, 629, 4.5, 49],
+  ["Tuna Krunch Bites", "The Nuzz Story", "cat", "cat-food", "Krunch", 349, 449, 4.6, 88],
+  ["Chicken Krunch Cat Cubes", "The Nuzz Story", "cat", "cat-food", "Krunch", 329, 429, 4.5, 74],
+  ["Salmon Krunch Crunchies", "The Nuzz Story", "cat", "cat-food", "Krunch", 359, 469, 4.4, 63],
+  ["Ocean Mix Krunch", "The Nuzz Story", "cat", "cat-food", "Krunch", 339, 439, 4.3, 47],
+  ["Chicken Meal Booster Cat", "The Nuzz Story", "cat", "cat-food", "Meal Booster", 269, 359, 4.7, 97],
+  ["Fish Broth Meal Booster", "The Nuzz Story", "cat", "cat-food", "Meal Booster", 289, 379, 4.6, 81],
+  ["Pumpkin Meal Booster Cat", "The Nuzz Story", "cat", "cat-food", "Meal Booster", 249, 329, 4.5, 70],
+  ["Salmon Oil Meal Booster", "The Nuzz Story", "cat", "cat-food", "Meal Booster", 309, 399, 4.8, 65],
+  ["Liver Sprinkle Meal Booster", "The Nuzz Story", "cat", "cat-food", "Meal Booster", 259, 349, 4.4, 52],
   ["Oatmeal Soothing Dog Shampoo", "Fluffly", "dog", "dog-grooming", "Shampoo", 549, 749, 4.6, 289],
   ["Tearless Puppy Shampoo", "Fluffly", "dog", "dog-grooming", "Shampoo", 479, 649, 4.4, 152],
   ["Slicker Deshedding Brush", "Groomio", "dog", "dog-grooming", "Brush", 699, 999, 4.5, 340],
@@ -193,13 +245,15 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
-export const products: Product[] = seeds.map((s, i) => {
+const seededProducts: Product[] = seeds.map((s, i) => {
   const [name, brand, pet, category, type, price, mrp, rating, reviews] = s;
   const isFood = category === "dog-food" || category === "cat-food";
   const isLiquid = type === "Shampoo" || type === "Skin Care" || type === "Supplement";
+  const slug = slugify(name);
+  const gallery = PRODUCT_GALLERIES[slug];
   return {
     id: `P${1000 + i}`,
-    slug: slugify(name),
+    slug,
     name,
     brand,
     pet,
@@ -209,7 +263,8 @@ export const products: Product[] = seeds.map((s, i) => {
     mrp,
     rating,
     reviews,
-    image: CATEGORY_IMAGES[category],
+    image: gallery?.[0] ?? CATEGORY_IMAGES[category],
+    ...(gallery ? { images: gallery } : {}),
     variants: isFood
       ? FOOD_VARIANTS
       : isLiquid
@@ -241,6 +296,225 @@ export const products: Product[] = seeds.map((s, i) => {
       : "Purified water, plant-derived surfactants, aloe vera extract, oatmeal protein, glycerin, vitamin E, chamomile oil, natural fragrance. Free from parabens, sulphates and artificial dyes.",
   };
 });
+
+const dehydratedCatalogProducts: Product[] = DEHYDRATED_PRODUCTS.map((p, i) => ({
+  id: `nuzz-dehydrated-${p.key}`,
+  slug: p.slug,
+  name: p.name,
+  brand: "The Nuzz Story",
+  pet: p.pet,
+  category: p.category,
+  type: p.type,
+  price: p.price,
+  mrp: p.mrp,
+  rating: 4.6 + (i % 3) * 0.1,
+  reviews: 48 + i * 11,
+  image: p.both,
+  images: [p.both, p.front, p.back],
+  variants: [
+    { label: "70 g", priceDelta: 0 },
+    { label: "150 g", priceDelta: 180 },
+    { label: "300 g", priceDelta: 380 },
+  ],
+  inStock: true,
+  isNew: true,
+  popularity: 200 - i * 8,
+  subscribable: true,
+  lifeStage: "all" as const,
+  description: `${p.name} from The Nuzz Story — slow-dehydrated, single-ingredient goodness for dogs. No fillers, no artificial colours.`,
+  specs: [
+    { label: "Brand", value: "The Nuzz Story" },
+    { label: "Suitable for", value: "Dogs" },
+    { label: "Product type", value: "Dehydrated" },
+    { label: "Shelf life", value: "12 months from manufacture" },
+    { label: "Country of origin", value: "India" },
+  ],
+  ingredients: "100% dehydrated meat / fish. No additives, no preservatives, no fillers.",
+}));
+
+const krunchCatalogProducts: Product[] = KRUNCH_PRODUCTS.map((p, i) => ({
+  id: `nuzz-krunch-${p.key}`,
+  slug: p.slug,
+  name: p.name,
+  brand: "The Nuzz Story",
+  pet: p.pet,
+  category: p.category,
+  type: p.type,
+  price: p.price,
+  mrp: p.mrp,
+  rating: 4.5 + (i % 3) * 0.1,
+  reviews: 52 + i * 9,
+  image: p.both,
+  images: [p.both, p.front, p.back],
+  variants: [
+    { label: "100 g", priceDelta: 0 },
+    { label: "250 g", priceDelta: 160 },
+    { label: "500 g", priceDelta: 320 },
+  ],
+  inStock: true,
+  isNew: true,
+  popularity: 190 - i * 7,
+  subscribable: true,
+  lifeStage: "all" as const,
+  description: `${p.name} from The Nuzz Story — crunchy, oven-baked bites dogs love. Made in small batches with real ingredients.`,
+  specs: [
+    { label: "Brand", value: "The Nuzz Story" },
+    { label: "Suitable for", value: "Dogs" },
+    { label: "Product type", value: "Krunch" },
+    { label: "Shelf life", value: "12 months from manufacture" },
+    { label: "Country of origin", value: "India" },
+  ],
+  ingredients: "Real meat / produce, whole grains, natural binders. No artificial colours or flavours.",
+}));
+
+const mealBoosterCatalogProducts: Product[] = MEAL_BOOSTER_PRODUCTS.map((p, i) => ({
+  id: `nuzz-mealbooster-${p.key}`,
+  slug: p.slug,
+  name: p.name,
+  brand: "The Nuzz Story",
+  pet: p.pet,
+  category: p.category,
+  type: p.type,
+  price: p.price,
+  mrp: p.mrp,
+  rating: 4.6 + (i % 3) * 0.1,
+  reviews: 44 + i * 10,
+  image: p.both,
+  images: [p.front, p.back],
+  variants: [
+    { label: "50 g", priceDelta: 0 },
+    { label: "100 g", priceDelta: 120 },
+    { label: "200 g", priceDelta: 240 },
+  ],
+  inStock: true,
+  isNew: true,
+  popularity: 180 - i * 6,
+  subscribable: true,
+  lifeStage: "all" as const,
+  description: `${p.name} from The Nuzz Story — sprinkle over meals for a protein-rich flavour boost dogs go crazy for.`,
+  specs: [
+    { label: "Brand", value: "The Nuzz Story" },
+    { label: "Suitable for", value: "Dogs" },
+    { label: "Product type", value: "Meal Booster" },
+    { label: "Shelf life", value: "12 months from manufacture" },
+    { label: "Country of origin", value: "India" },
+  ],
+  ingredients: "Dehydrated organs / fish, natural seasonings. No fillers or artificial additives.",
+}));
+
+const peanutButterCatalogProducts: Product[] = PEANUT_BUTTER_PRODUCTS.map((p, i) => ({
+  id: `nuzz-peanutbutter-${p.key}`,
+  slug: p.slug,
+  name: p.name,
+  brand: "The Nuzz Story",
+  pet: p.pet,
+  category: p.category,
+  type: p.type,
+  price: p.price,
+  mrp: p.mrp,
+  rating: 4.7,
+  reviews: 96 + i,
+  image: p.both,
+  images: [p.front, p.back],
+  variants: [
+    { label: "250 g", priceDelta: 0 },
+    { label: "500 g", priceDelta: 150 },
+  ],
+  inStock: true,
+  isNew: true,
+  popularity: 210,
+  subscribable: true,
+  lifeStage: "all" as const,
+  description: `${p.name} — xylitol-free peanut butter made for dogs. Perfect for lick mats, kong stuffing and training rewards.`,
+  specs: [
+    { label: "Brand", value: "The Nuzz Story" },
+    { label: "Suitable for", value: "Dogs" },
+    { label: "Product type", value: "Peanut Butter" },
+    { label: "Shelf life", value: "9 months from manufacture" },
+    { label: "Country of origin", value: "India" },
+  ],
+  ingredients: "Roasted peanuts. No xylitol, no added sugar, no salt.",
+}));
+
+const bedCatalogProducts: Product[] = BED_PRODUCTS.map((p, i) => ({
+  id: `nuzz-bed-${p.key}`,
+  slug: p.slug,
+  name: p.name,
+  brand: "The Nuzz Story",
+  pet: p.pet,
+  category: p.category,
+  type: p.type,
+  price: p.price,
+  mrp: p.mrp,
+  rating: 4.7,
+  reviews: 68 + i,
+  image: p.both,
+  images: p.gallery ?? [p.front, p.back],
+  variants: [
+    { label: "S", priceDelta: 0 },
+    { label: "M", priceDelta: 200 },
+    { label: "L", priceDelta: 400 },
+  ],
+  inStock: true,
+  isNew: true,
+  popularity: 220,
+  subscribable: false,
+  lifeStage: "all" as const,
+  description: `${p.name} — soft, supportive rest for dogs who love a proper nest.`,
+  specs: [
+    { label: "Brand", value: "The Nuzz Story" },
+    { label: "Suitable for", value: "Dogs" },
+    { label: "Product type", value: "Bed" },
+    { label: "Country of origin", value: "India" },
+  ],
+  ingredients: "",
+}));
+
+const tshirtCatalogProducts: Product[] = TSHIRT_PRODUCTS.map((p, i) => ({
+  id: `nuzz-tshirt-${p.key}`,
+  slug: p.slug,
+  name: p.name,
+  brand: "The Nuzz Story",
+  pet: p.pet,
+  category: p.category,
+  type: p.type,
+  price: p.price,
+  mrp: p.mrp,
+  rating: 4.6 + (i % 3) * 0.1,
+  reviews: 40 + i * 8,
+  image: p.both,
+  images: p.gallery ?? [p.front, p.back],
+  variants: [
+    { label: "XS", priceDelta: 0 },
+    { label: "S", priceDelta: 0 },
+    { label: "M", priceDelta: 50 },
+    { label: "L", priceDelta: 100 },
+    { label: "XL", priceDelta: 150 },
+  ],
+  inStock: true,
+  isNew: true,
+  popularity: 200 - i * 5,
+  subscribable: false,
+  lifeStage: "all" as const,
+  description: `${p.name} — soft everyday apparel from The Nuzz Story.`,
+  specs: [
+    { label: "Brand", value: "The Nuzz Story" },
+    { label: "Suitable for", value: "Dogs" },
+    { label: "Product type", value: "T-Shirt" },
+    { label: "Country of origin", value: "India" },
+  ],
+  ingredients: "",
+}));
+
+export const products: Product[] = [
+  ...dehydratedCatalogProducts,
+  ...krunchCatalogProducts,
+  ...mealBoosterCatalogProducts,
+  ...peanutButterCatalogProducts,
+  ...bedCatalogProducts,
+  ...tshirtCatalogProducts,
+  ...seededProducts,
+];
 
 export const brands = Array.from(new Set(products.map((p) => p.brand))).sort();
 export const productTypes = Array.from(new Set(products.map((p) => p.type))).sort();
@@ -374,8 +648,8 @@ export const mockOrders: MockOrder[] = [
     status: "Out for Delivery",
     total: 2648,
     items: [
-      { name: "Chicken & Rice Adult Dry Food", qty: 1, variant: "3 kg", image: dogFoodImg },
-      { name: "Chicken Jerky Training Treats", qty: 2, variant: "Standard pack", image: dogFoodImg },
+      { name: "Chicken Breast Dehydrated", qty: 1, variant: "150 g", image: dogFoodImg },
+      { name: "Classic Chicken Krunch", qty: 2, variant: "100 g", image: dogFoodImg },
     ],
   },
   {
@@ -390,7 +664,7 @@ export const mockOrders: MockOrder[] = [
     date: "09 Jun 2026",
     status: "Delivered",
     total: 1099,
-    items: [{ name: "Tuna & Salmon Adult Dry Food", qty: 1, variant: "1 kg", image: catFoodImg }],
+    items: [{ name: "Tuna Dehydrated Flakes", qty: 1, variant: "1 kg", image: catFoodImg }],
   },
   {
     id: "PP-24102",

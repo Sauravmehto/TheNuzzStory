@@ -1,5 +1,6 @@
 import type { Coupon, Product } from "@/data/catalog";
 import { products as staticProducts, coupons as staticCoupons, resolveCatalogImage } from "@/data/catalog";
+import { PRODUCT_BOTH_IMAGE_KEYS, PRODUCT_GALLERIES } from "@/data/product-assets";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export type ProductRow = {
@@ -46,19 +47,23 @@ export function parseProductRow(row: unknown): ProductRow {
 }
 
 export function rowToProduct(row: ProductRow): Product {
+  const category = row.category as Product["category"];
+  const image = resolveCatalogImage(row.image_url, category);
+  const gallery = PRODUCT_GALLERIES[row.slug];
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     brand: row.brand,
     pet: row.pet as Product["pet"],
-    category: row.category as Product["category"],
+    category,
     type: row.type,
     price: Number(row.price),
     mrp: Number(row.mrp),
     rating: Number(row.rating),
     reviews: row.reviews,
-    image: resolveCatalogImage(row.image_url, row.category as Product["category"]),
+    image: gallery?.[0] ?? image,
+    ...(gallery ? { images: gallery } : {}),
     variants: row.variants ?? [],
     inStock: row.in_stock,
     isNew: row.is_new,
@@ -71,7 +76,22 @@ export function rowToProduct(row: ProductRow): Product {
   };
 }
 
+/** Hide junk / unsalable rows from the public catalog (admin still sees everything). */
+export function isStorefrontVisible(p: Product): boolean {
+  const price = Number(p.price);
+  // Out of stock + ₹0 (and any zero-price junk) must not appear on the storefront
+  if (!Number.isFinite(price) || price <= 0) return false;
+  if (!p.inStock && price <= 0) return false;
+  // Broken CSV leftovers look like "20Kg,,0,3299,1.0 UNT,0,Food,3299"
+  if (/,/.test(p.name) || /e[+-]?\d+/i.test(p.name)) return false;
+  return true;
+}
+
 export function productToRow(p: Product, active = true): ProductRow {
+  const image_url =
+    PRODUCT_BOTH_IMAGE_KEYS[p.slug] ??
+    (typeof p.image === "string" ? p.image.split("/").pop()?.split("?")[0] ?? p.image : "");
+
   return {
     id: p.id,
     slug: p.slug,
@@ -84,7 +104,7 @@ export function productToRow(p: Product, active = true): ProductRow {
     mrp: p.mrp,
     rating: p.rating,
     reviews: p.reviews,
-    image_url: typeof p.image === "string" ? p.image : "",
+    image_url,
     variants: p.variants,
     in_stock: p.inStock,
     is_new: p.isNew,
@@ -120,18 +140,21 @@ export function couponToRow(c: Coupon, active = true): CouponRow {
 }
 
 export async function fetchCatalogProducts(includeInactive = false): Promise<Product[]> {
-  if (!isSupabaseConfigured) return staticProducts;
+  if (!isSupabaseConfigured) return staticProducts.filter(isStorefrontVisible);
 
   let query = supabase.from("products").select("*").order("name");
   if (!includeInactive) query = query.eq("active", true);
 
   const { data, error } = await query;
-  if (error || !data?.length) return staticProducts;
-  return data.map((row) => rowToProduct(parseProductRow(row)));
+  if (error || !data?.length) return staticProducts.filter(isStorefrontVisible);
+  return data.map((row) => rowToProduct(parseProductRow(row))).filter(isStorefrontVisible);
 }
 
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
-  if (!isSupabaseConfigured) return staticProducts.find((p) => p.slug === slug) ?? null;
+  if (!isSupabaseConfigured) {
+    const local = staticProducts.find((p) => p.slug === slug) ?? null;
+    return local && isStorefrontVisible(local) ? local : null;
+  }
 
   const { data, error } = await supabase
     .from("products")
@@ -141,9 +164,11 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
     .maybeSingle();
 
   if (error || !data) {
-    return staticProducts.find((p) => p.slug === slug) ?? null;
+    const local = staticProducts.find((p) => p.slug === slug) ?? null;
+    return local && isStorefrontVisible(local) ? local : null;
   }
-  return rowToProduct(parseProductRow(data));
+  const product = rowToProduct(parseProductRow(data));
+  return isStorefrontVisible(product) ? product : null;
 }
 
 export async function fetchCatalogCoupons(): Promise<Coupon[]> {
