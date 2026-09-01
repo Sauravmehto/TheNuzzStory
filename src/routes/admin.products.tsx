@@ -20,6 +20,7 @@ const CATEGORY_FILTERS: { value: "all" | CategorySlug; label: string }[] = [
   { value: "toys", label: "Toys" },
   { value: "accessories", label: "Accessories" },
   { value: "beds", label: "Beds" },
+  { value: "dog-wear", label: "Dog Wear" },
   { value: "tshirt", label: "T-Shirts" },
   { value: "healthcare", label: "Healthcare" },
 ];

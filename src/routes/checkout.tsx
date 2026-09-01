@@ -82,7 +82,7 @@ function Checkout() {
   }
 
   return (
-    <div className="mx-auto max-w-full px-3 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-full px-3 py-5 sm:px-4 sm:py-8">
       <h1 className="font-display text-3xl font-extrabold sm:text-4xl">Checkout</h1>
 
       <ol className="mt-6 flex items-center gap-2">

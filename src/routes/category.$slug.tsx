@@ -85,10 +85,12 @@ function CategoryPage() {
   }, [category.slug, inCategory]);
 
   const availablePets = useMemo(() => {
+    if (category.slug === "tshirt") return [] as const;
+    if (category.slug === "dog-wear") return ["dog"] as const;
     if (category.pet === "dog") return ["dog"] as const;
     if (category.pet === "cat") return ["cat"] as const;
     return ["dog", "cat"] as const;
-  }, [category.pet]);
+  }, [category.pet, category.slug]);
 
   const availableTypes = useMemo(() => {
     if (HOUSE_FOOD_SLUGS.has(category.slug)) return [...HOUSE_FOOD_TYPES];
@@ -164,16 +166,18 @@ function CategoryPage() {
         ))}
       </FilterBlock>
 
-      <FilterBlock title="Pet type">
-        {availablePets.map((p) => (
-          <Check
-            key={p}
-            label={p === "dog" ? "Dog" : "Cat"}
-            checked={petSel.includes(p)}
-            onChange={() => toggle(petSel, setPetSel, p)}
-          />
-        ))}
-      </FilterBlock>
+      {availablePets.length > 0 && (
+        <FilterBlock title="Pet type">
+          {availablePets.map((p) => (
+            <Check
+              key={p}
+              label={p === "dog" ? "Dog" : "Cat"}
+              checked={petSel.includes(p)}
+              onChange={() => toggle(petSel, setPetSel, p)}
+            />
+          ))}
+        </FilterBlock>
+      )}
 
       <FilterBlock title="Product type">
         {availableTypes.map((t) => (
