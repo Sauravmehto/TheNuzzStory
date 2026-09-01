@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-BkSabwWG.js";import{B as t}from"./index-CMdVHAtD.js";var n=e(),r=()=>(0,n.jsx)(t,{to:`/admin/dashboard`});export{r as component};
