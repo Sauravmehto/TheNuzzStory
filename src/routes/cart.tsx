@@ -41,7 +41,7 @@ function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-full px-3 py-5 sm:px-4 sm:py-8">
       <h1 className="font-display text-3xl font-extrabold sm:text-4xl">Your Cart</h1>
       <p className="mt-1 text-sm text-muted-foreground">{cart.length} item(s) · You save {money(savings)}</p>
 
