@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Database, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import type { CategorySlug } from "@/data/catalog";
 import { money } from "@/data/catalog";
 import { getAccessToken } from "@/lib/admin/session";
 import { deleteAdminProduct, listAdminProducts, seedCatalogFromStatic } from "@/server/catalog";
@@ -10,10 +11,37 @@ export const Route = createFileRoute("/admin/products")({
   component: AdminProducts,
 });
 
+const CATEGORY_FILTERS: { value: "all" | CategorySlug; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "dog-food", label: "Dog Food" },
+  { value: "cat-food", label: "Cat Food" },
+  { value: "dog-grooming", label: "Dog Grooming" },
+  { value: "cat-grooming", label: "Cat Grooming" },
+  { value: "toys", label: "Toys" },
+  { value: "accessories", label: "Accessories" },
+  { value: "beds", label: "Beds" },
+  { value: "tshirt", label: "T-Shirts" },
+  { value: "healthcare", label: "Healthcare" },
+];
+
 function AdminProducts() {
   const [items, setItems] = useState<Awaited<ReturnType<typeof listAdminProducts>>>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<"all" | CategorySlug>("all");
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: items.length };
+    for (const p of items) {
+      counts[p.category] = (counts[p.category] ?? 0) + 1;
+    }
+    return counts;
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    if (categoryFilter === "all") return items;
+    return items.filter((p) => p.category === categoryFilter);
+  }, [items, categoryFilter]);
 
   async function reload() {
     const token = await getAccessToken();
@@ -95,6 +123,59 @@ function AdminProducts() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <label
+              htmlFor="admin-category-filter"
+              className="text-xs font-bold uppercase tracking-wide text-muted-foreground"
+            >
+              Filter by category
+            </label>
+            <select
+              id="admin-category-filter"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value as "all" | CategorySlug)}
+              className="mt-1.5 block w-full min-w-[220px] rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-semibold outline-none focus:border-primary"
+            >
+              {CATEGORY_FILTERS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label} ({categoryCounts[opt.value] ?? 0})
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-bold text-foreground">{filteredItems.length}</span> of{" "}
+            <span className="font-bold text-foreground">{items.length}</span> products
+          </p>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {CATEGORY_FILTERS.map((opt) => {
+            const active = categoryFilter === opt.value;
+            const count = categoryCounts[opt.value] ?? 0;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setCategoryFilter(opt.value)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border bg-background text-foreground hover:bg-secondary"
+                }`}
+              >
+                {opt.label}
+                <span className={`ml-1.5 ${active ? "opacity-80" : "text-muted-foreground"}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-border bg-card p-4 shadow-sm">
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading products…</p>
@@ -113,12 +194,18 @@ function AdminProducts() {
               {items.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-10 text-center text-muted-foreground">
-                    No products in database yet. Click &quot;Seed from static catalog&quot; to import
-                    the default catalog.
+                    No products in database yet. Click &quot;Seed from static catalog&quot; or add a
+                    product.
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-muted-foreground">
+                    No products in this category.
                   </td>
                 </tr>
               ) : (
-                items.map((p) => (
+                filteredItems.map((p) => (
                   <tr key={p.id} className="border-t border-border">
                     <td className="py-3">
                       <div className="flex items-center gap-3">

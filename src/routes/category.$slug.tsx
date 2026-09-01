@@ -39,6 +39,10 @@ const SORTS = [
   { id: "rating", label: "Rating" },
 ] as const;
 
+const HOUSE_FOOD_TYPES = ["Dehydrated", "Krunch", "Meal Booster", "Peanut Butter"] as const;
+const HOUSE_BRAND = "The Nuzz Story";
+const HOUSE_FOOD_SLUGS = new Set(["dog-food", "cat-food"]);
+
 function CategoryPage() {
   const { category } = Route.useLoaderData();
   const { products, catalogLoading } = useStore();
@@ -59,18 +63,37 @@ function CategoryPage() {
     return () => clearTimeout(t);
   }, [category.slug, catalogLoading]);
 
-  const inCategory = useMemo(
-    () => products.filter((p) => p.category === category.slug),
-    [category.slug, products],
-  );
-  const availableBrands = useMemo(
-    () => brands.filter((b) => inCategory.some((p) => p.brand === b)),
-    [inCategory],
-  );
-  const availableTypes = useMemo(
-    () => productTypes.filter((t) => inCategory.some((p) => p.type === t)),
-    [inCategory],
-  );
+  useEffect(() => {
+    setBrandSel([]);
+    setPetSel([]);
+    setTypeSel([]);
+    setVisible(8);
+  }, [category.slug]);
+
+  const inCategory = useMemo(() => {
+    let list = products.filter((p) => p.category === category.slug);
+    // Dog / cat food: in-house line only for now
+    if (HOUSE_FOOD_SLUGS.has(category.slug)) {
+      list = list.filter((p) => p.brand === HOUSE_BRAND);
+    }
+    return list;
+  }, [category.slug, products]);
+
+  const availableBrands = useMemo(() => {
+    if (HOUSE_FOOD_SLUGS.has(category.slug)) return [HOUSE_BRAND];
+    return brands.filter((b) => inCategory.some((p) => p.brand === b));
+  }, [category.slug, inCategory]);
+
+  const availablePets = useMemo(() => {
+    if (category.pet === "dog") return ["dog"] as const;
+    if (category.pet === "cat") return ["cat"] as const;
+    return ["dog", "cat"] as const;
+  }, [category.pet]);
+
+  const availableTypes = useMemo(() => {
+    if (HOUSE_FOOD_SLUGS.has(category.slug)) return [...HOUSE_FOOD_TYPES];
+    return productTypes.filter((t) => inCategory.some((p) => p.type === t));
+  }, [category.slug, inCategory]);
 
   const filtered = useMemo(() => {
     const list = inCategory.filter(
@@ -142,7 +165,7 @@ function CategoryPage() {
       </FilterBlock>
 
       <FilterBlock title="Pet type">
-        {["dog", "cat"].map((p) => (
+        {availablePets.map((p) => (
           <Check
             key={p}
             label={p === "dog" ? "Dog" : "Cat"}

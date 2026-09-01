@@ -18,6 +18,8 @@ const CATEGORIES: CategorySlug[] = [
   "cat-grooming",
   "toys",
   "accessories",
+  "beds",
+  "tshirt",
   "healthcare",
 ];
 

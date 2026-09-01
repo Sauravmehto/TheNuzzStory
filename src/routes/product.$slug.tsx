@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { ProductCard } from "@/components/ProductCard";
 import { Stars } from "@/components/Stars";
 import { categories, money, resolveCatalogImage } from "@/data/catalog";
+import { resolveProductGallery } from "@/data/product-assets";
 import { fetchProductBySlug } from "@/lib/catalog-db";
 import { useStore } from "@/store/StoreContext";
 
@@ -70,12 +71,11 @@ function ProductPage() {
     .slice(0, 4);
   const fbt = products.filter((p) => p.pet === product.pet && p.id !== product.id).slice(0, 2);
   const bundleTotal = price + fbt.filter((p) => bundle.includes(p.id)).reduce((s, p) => s + p.price, 0);
-  const gallery = [
+  const gallery = resolveProductGallery(
+    product.slug,
     resolveCatalogImage(product.image, product.category),
     category.image,
-    resolveCatalogImage(product.image, product.category),
-    category.image,
-  ];
+  );
   const wished = wishlist.includes(product.slug);
 
   return (
