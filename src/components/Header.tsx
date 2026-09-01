@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Heart,
-  HeartPulse,
   LogOut,
   Menu,
   Search,
@@ -14,6 +13,8 @@ import {
   Dog,
   Cat,
   Bone,
+  Bed,
+  Shirt,
 } from "lucide-react";
 import { BrandLockup } from "@/components/BrandLockup";
 import { money, resolveCatalogImage } from "@/data/catalog";
@@ -23,15 +24,17 @@ const navLinks = [
   { to: "/category/$slug", params: { slug: "dog-food" }, label: "Dog", icon: Dog },
   { to: "/category/$slug", params: { slug: "cat-food" }, label: "Cat", icon: Cat },
   { to: "/category/$slug", params: { slug: "toys" }, label: "Toys", icon: Bone },
-  { to: "/category/$slug", params: { slug: "healthcare" }, label: "Healthcare", icon: HeartPulse },
+  { to: "/category/$slug", params: { slug: "beds" }, label: "Beds", icon: Bed },
+  { to: "/category/$slug", params: { slug: "tshirt" }, label: "T-Shirts", icon: Shirt },
 ] as const;
 
 const mobileShopLinks = [
   { slug: "dog-food", label: "Dog Food" },
   { slug: "cat-grooming", label: "Cat Grooming" },
   { slug: "toys", label: "Toys" },
+  { slug: "beds", label: "Beds" },
+  { slug: "tshirt", label: "T-Shirts" },
   { slug: "accessories", label: "Accessories" },
-  { slug: "healthcare", label: "Healthcare" },
 ] as const;
 
 const linkClass =
