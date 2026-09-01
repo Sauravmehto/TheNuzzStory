@@ -7,12 +7,13 @@ import healthImg from "@/assets/p-health.jpg";
 import {
   BED_PRODUCTS,
   DEHYDRATED_PRODUCTS,
+  DOG_WEAR_PRODUCTS,
+  HUMAN_TSHIRT_PRODUCTS,
   KRUNCH_PRODUCTS,
   MEAL_BOOSTER_PRODUCTS,
   PEANUT_BUTTER_PRODUCTS,
   PRODUCT_GALLERIES,
   PRODUCT_IMAGE_FILES,
-  TSHIRT_PRODUCTS,
 } from "@/data/product-assets";
 
 export type Pet = "dog" | "cat";
@@ -26,7 +27,8 @@ export type CategorySlug =
   | "accessories"
   | "healthcare"
   | "beds"
-  | "tshirt";
+  | "tshirt"
+  | "dog-wear";
 
 export interface Category {
   slug: CategorySlug;
@@ -71,7 +73,8 @@ export const CATEGORY_IMAGES: Record<CategorySlug, string> = {
   accessories: accessoriesImg,
   healthcare: healthImg,
   beds: BED_PRODUCTS[0]?.front ?? accessoriesImg,
-  tshirt: TSHIRT_PRODUCTS[0]?.front ?? accessoriesImg,
+  tshirt: HUMAN_TSHIRT_PRODUCTS[0]?.front ?? accessoriesImg,
+  "dog-wear": DOG_WEAR_PRODUCTS[0]?.front ?? accessoriesImg,
 };
 
 const LOCAL_ASSETS: Record<string, string> = {
@@ -157,9 +160,16 @@ export const categories: Category[] = [
   {
     slug: "tshirt",
     name: "T-Shirts",
-    blurb: "Pet apparel & tees",
-    image: TSHIRT_PRODUCTS[0]?.front ?? accessoriesImg,
+    blurb: "Men's tees from The Nuzz Story",
+    image: HUMAN_TSHIRT_PRODUCTS[0]?.front ?? accessoriesImg,
     pet: "both",
+  },
+  {
+    slug: "dog-wear",
+    name: "Dog Wear",
+    blurb: "T-shirts & apparel for your pup",
+    image: DOG_WEAR_PRODUCTS[0]?.front ?? accessoriesImg,
+    pet: "dog",
   },
   {
     slug: "healthcare",
@@ -470,7 +480,7 @@ const bedCatalogProducts: Product[] = BED_PRODUCTS.map((p, i) => ({
   ingredients: "",
 }));
 
-const tshirtCatalogProducts: Product[] = TSHIRT_PRODUCTS.map((p, i) => ({
+const tshirtCatalogProducts: Product[] = HUMAN_TSHIRT_PRODUCTS.map((p, i) => ({
   id: `nuzz-tshirt-${p.key}`,
   slug: p.slug,
   name: p.name,
@@ -485,7 +495,6 @@ const tshirtCatalogProducts: Product[] = TSHIRT_PRODUCTS.map((p, i) => ({
   image: p.both,
   images: p.gallery ?? [p.front, p.back],
   variants: [
-    { label: "XS", priceDelta: 0 },
     { label: "S", priceDelta: 0 },
     { label: "M", priceDelta: 50 },
     { label: "L", priceDelta: 100 },
@@ -496,11 +505,47 @@ const tshirtCatalogProducts: Product[] = TSHIRT_PRODUCTS.map((p, i) => ({
   popularity: 200 - i * 5,
   subscribable: false,
   lifeStage: "all" as const,
-  description: `${p.name} — soft everyday apparel from The Nuzz Story.`,
+  description: `${p.name} — premium cotton men's tee from The Nuzz Story.`,
+  specs: [
+    { label: "Brand", value: "The Nuzz Story" },
+    { label: "Suitable for", value: "Men" },
+    { label: "Product type", value: "Men's T-Shirt" },
+    { label: "Country of origin", value: "India" },
+  ],
+  ingredients: "",
+}));
+
+const dogWearCatalogProducts: Product[] = DOG_WEAR_PRODUCTS.map((p, i) => ({
+  id: `nuzz-dog-wear-${p.key}`,
+  slug: p.slug,
+  name: p.name,
+  brand: "The Nuzz Story",
+  pet: p.pet,
+  category: p.category,
+  type: p.type,
+  price: p.price,
+  mrp: p.mrp,
+  rating: 4.6 + (i % 3) * 0.1,
+  reviews: 36 + i * 6,
+  image: p.both,
+  images: p.gallery ?? [p.front, p.back],
+  variants: [
+    { label: "XS", priceDelta: 0 },
+    { label: "S", priceDelta: 0 },
+    { label: "M", priceDelta: 50 },
+    { label: "L", priceDelta: 100 },
+    { label: "XL", priceDelta: 150 },
+  ],
+  inStock: true,
+  isNew: true,
+  popularity: 190 - i * 5,
+  subscribable: false,
+  lifeStage: "all" as const,
+  description: `${p.name} — comfortable everyday apparel for dogs from The Nuzz Story.`,
   specs: [
     { label: "Brand", value: "The Nuzz Story" },
     { label: "Suitable for", value: "Dogs" },
-    { label: "Product type", value: "T-Shirt" },
+    { label: "Product type", value: "Dog T-Shirt" },
     { label: "Country of origin", value: "India" },
   ],
   ingredients: "",
@@ -513,6 +558,7 @@ export const products: Product[] = [
   ...peanutButterCatalogProducts,
   ...bedCatalogProducts,
   ...tshirtCatalogProducts,
+  ...dogWearCatalogProducts,
   ...seededProducts,
 ];
 

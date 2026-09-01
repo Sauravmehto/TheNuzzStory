@@ -25,6 +25,7 @@ const navLinks = [
   { to: "/category/$slug", params: { slug: "cat-food" }, label: "Cat", icon: Cat },
   { to: "/category/$slug", params: { slug: "toys" }, label: "Toys", icon: Bone },
   { to: "/category/$slug", params: { slug: "beds" }, label: "Beds", icon: Bed },
+  { to: "/category/$slug", params: { slug: "dog-wear" }, label: "Dog Wear", icon: Dog },
   { to: "/category/$slug", params: { slug: "tshirt" }, label: "T-Shirts", icon: Shirt },
 ] as const;
 
@@ -33,6 +34,7 @@ const mobileShopLinks = [
   { slug: "cat-grooming", label: "Cat Grooming" },
   { slug: "toys", label: "Toys" },
   { slug: "beds", label: "Beds" },
+  { slug: "dog-wear", label: "Dog Wear" },
   { slug: "tshirt", label: "T-Shirts" },
   { slug: "accessories", label: "Accessories" },
 ] as const;
