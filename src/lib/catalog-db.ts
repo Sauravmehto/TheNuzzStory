@@ -76,8 +76,15 @@ export function rowToProduct(row: ProductRow): Product {
   };
 }
 
+const REMOVED_PRODUCT_SLUGS = new Set([
+  "nuzz-dog-wear-black",
+  "nuzz-dog-wear-maroon",
+  "nuzz-dog-wear-white",
+]);
+
 /** Hide junk / unsalable rows from the public catalog (admin still sees everything). */
 export function isStorefrontVisible(p: Product): boolean {
+  if (REMOVED_PRODUCT_SLUGS.has(p.slug)) return false;
   const price = Number(p.price);
   // Out of stock + ₹0 (and any zero-price junk) must not appear on the storefront
   if (!Number.isFinite(price) || price <= 0) return false;

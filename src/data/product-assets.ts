@@ -54,16 +54,13 @@ import bedSide from "@/assets/product_list/bed/bed_side.png";
 import bedLower from "@/assets/product_list/bed/bed_lower.png";
 
 import teeBlack from "@/assets/product_list/Tshirts/black .jpg";
-import teeBlackGr from "@/assets/product_list/Tshirts/black gr.jpg";
 import teeBlueFront from "@/assets/product_list/Tshirts/blue f gr.jpg";
 import teeBlueAlt from "@/assets/product_list/Tshirts/blue gr f.jpg";
 import teeChaosRed from "@/assets/product_list/Tshirts/built for choas red.jpg";
 import teeMaroon from "@/assets/product_list/Tshirts/marhoon.jpg";
-import teeMaroonGr from "@/assets/product_list/Tshirts/marhoon gr w.jpg";
 import teePinkFront from "@/assets/product_list/Tshirts/pink front gr.jpg";
 import teePinkGr from "@/assets/product_list/Tshirts/pink gr.jpg";
 import teeWhite from "@/assets/product_list/Tshirts/white.jpg";
-import teeWhiteGr from "@/assets/product_list/Tshirts/white gr.jpg";
 
 export type ProductImageSet = {
   key: string;
@@ -444,27 +441,6 @@ export const HUMAN_TSHIRT_PRODUCTS: ProductImageSet[] = [
 /** Dog wear T-Shirts — pet apparel shots. */
 export const DOG_WEAR_PRODUCTS: ProductImageSet[] = [
   {
-    key: "black",
-    fileKey: "dog_wear_black",
-    slug: "nuzz-dog-wear-black",
-    name: "Dog T-Shirt — Black",
-    type: "Dog T-Shirt",
-    pet: "dog",
-    category: "dog-wear",
-    price: 499,
-    mrp: 649,
-    front: teeBlackGr,
-    back: teeBlackGr,
-    both: teeBlackGr,
-    hasBothFile: false,
-    gallery: [teeBlackGr],
-    customFiles: {
-      "dog_wear_black.jpg": teeBlackGr,
-      "black gr.jpg": teeBlackGr,
-    },
-    cardImageFile: "dog_wear_black.jpg",
-  },
-  {
     key: "blue",
     fileKey: "dog_wear_blue",
     slug: "nuzz-dog-wear-blue",
@@ -508,27 +484,6 @@ export const DOG_WEAR_PRODUCTS: ProductImageSet[] = [
     cardImageFile: "dog_wear_chaos_red.jpg",
   },
   {
-    key: "maroon",
-    fileKey: "dog_wear_maroon",
-    slug: "nuzz-dog-wear-maroon",
-    name: "Dog T-Shirt — Maroon",
-    type: "Dog T-Shirt",
-    pet: "dog",
-    category: "dog-wear",
-    price: 499,
-    mrp: 649,
-    front: teeMaroonGr,
-    back: teeMaroonGr,
-    both: teeMaroonGr,
-    hasBothFile: false,
-    gallery: [teeMaroonGr],
-    customFiles: {
-      "dog_wear_maroon.jpg": teeMaroonGr,
-      "marhoon gr w.jpg": teeMaroonGr,
-    },
-    cardImageFile: "dog_wear_maroon.jpg",
-  },
-  {
     key: "pink",
     fileKey: "dog_wear_pink",
     slug: "nuzz-dog-wear-pink",
@@ -549,27 +504,6 @@ export const DOG_WEAR_PRODUCTS: ProductImageSet[] = [
       "pink front gr.jpg": teePinkFront,
     },
     cardImageFile: "dog_wear_pink.jpg",
-  },
-  {
-    key: "white",
-    fileKey: "dog_wear_white",
-    slug: "nuzz-dog-wear-white",
-    name: "Dog T-Shirt — White",
-    type: "Dog T-Shirt",
-    pet: "dog",
-    category: "dog-wear",
-    price: 499,
-    mrp: 649,
-    front: teeWhiteGr,
-    back: teeWhiteGr,
-    both: teeWhiteGr,
-    hasBothFile: false,
-    gallery: [teeWhiteGr],
-    customFiles: {
-      "dog_wear_white.jpg": teeWhiteGr,
-      "white gr.jpg": teeWhiteGr,
-    },
-    cardImageFile: "dog_wear_white.jpg",
   },
 ];
 
