@@ -2,22 +2,15 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
-  applySupabaseSession,
-  sendEmailOtp,
-  verifyEmailOtp,
   fetchProfile,
-  upsertProfile,
   profileToAppUser,
+  requestPasswordReset,
+  signInWithEmail,
+  signOutSupabase,
 } from "@/lib/auth";
 import { isStaffRole } from "@/lib/admin/roles";
-import {
-  DEV_ADMIN_EMAIL,
-  DEV_ADMIN_OTP,
-  isDevAdminEmail,
-} from "@/lib/admin/dev-login";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useStore } from "@/store/StoreContext";
-import { verifyDevAdminLogin } from "@/server/dev-admin";
 
 export const Route = createFileRoute("/admin/login")({
   component: AdminLogin,
@@ -26,80 +19,26 @@ export const Route = createFileRoute("/admin/login")({
 function AdminLogin() {
   const navigate = useNavigate();
   const { setUserFromAuth, refreshUser } = useStore();
-  const [step, setStep] = useState<"form" | "otp">("form");
-  const [email, setEmail] = useState(DEV_ADMIN_EMAIL);
-  const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(false);
 
-  async function sendOtp() {
+  async function submit() {
     if (!isSupabaseConfigured) {
       toast.error("Supabase is not configured");
       return;
     }
     setBusy(true);
     try {
-      if (isDevAdminEmail(email)) {
-        setStep("otp");
-        toast.success("Dev admin OTP ready", {
-          description: `Use OTP ${DEV_ADMIN_OTP} (no email sent)`,
-        });
-        return;
-      }
-
-      const { error } = await sendEmailOtp({ email, createUser: false });
-      if (error) throw error;
-      setStep("otp");
-      toast.success("OTP sent", { description: `Check ${email}` });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send OTP");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function confirmOtp() {
-    setBusy(true);
-    try {
-      if (isDevAdminEmail(email)) {
-        const result = await verifyDevAdminLogin({
-          data: { email, code: otp },
-        });
-        const { error: sessionError } = await applySupabaseSession({
-          access_token: result.access_token,
-          refresh_token: result.refresh_token,
-        });
-        if (sessionError) throw sessionError;
-
-        const profile = await fetchProfile(result.userId);
-        if (!profile || !isStaffRole(profile.role)) {
-          throw new Error("Admin profile missing staff role");
-        }
-        setUserFromAuth(profileToAppUser(profile));
-        await refreshUser();
-        toast.success("Welcome to admin");
-        navigate({ to: "/admin/dashboard" });
-        return;
-      }
-
-      const { data, error } = await verifyEmailOtp(email, otp, { isSignup: false });
+      const { data, error } = await signInWithEmail(email, password);
       if (error) throw error;
       const authUser = data?.user;
-      if (!authUser) throw new Error("Verification failed");
+      if (!authUser) throw new Error("Login failed");
 
-      let profile = await fetchProfile(authUser.id);
-      if (!profile) {
-        await upsertProfile({
-          id: authUser.id,
-          name: authUser.email?.split("@")[0] || "Admin",
-          email: authUser.email ?? email,
-          phone: "",
-          loyaltyPoints: 0,
-          role: "customer",
-        });
-        profile = await fetchProfile(authUser.id);
-      }
-
+      const profile = await fetchProfile(authUser.id);
       if (!profile || profile.is_active === false || !isStaffRole(profile.role)) {
+        await signOutSupabase();
         toast.error("This account is not an admin. Ask a super_admin to grant access.");
         return;
       }
@@ -109,7 +48,7 @@ function AdminLogin() {
       toast.success("Welcome to admin");
       navigate({ to: "/admin/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Invalid OTP");
+      toast.error(err instanceof Error ? err.message : "Could not sign in");
     } finally {
       setBusy(false);
     }
@@ -121,77 +60,46 @@ function AdminLogin() {
         <p className="text-xs font-bold uppercase tracking-wide text-primary">Staff only</p>
         <h1 className="mt-2 font-display text-2xl font-extrabold">Admin login</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {step === "otp"
-            ? isDevAdminEmail(email)
-              ? `Dev mode: enter OTP ${DEV_ADMIN_OTP}`
-              : `Enter the OTP sent to ${email}`
-            : "Sign in with your staff email. No password — email OTP only."}
+          Sign in with the email and password on your staff account.
         </p>
 
-        {step === "form" ? (
-          <form
-            className="mt-5 grid gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void sendOtp();
-            }}
+        <form
+          className="mt-5 grid gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit();
+          }}
+        >
+          <label className="text-sm">
+            <span className="text-xs font-semibold text-muted-foreground">Staff email</span>
+            <input
+              type="email"
+              required
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            />
+          </label>
+          <label className="text-sm">
+            <span className="text-xs font-semibold text-muted-foreground">Password</span>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={busy}
+            className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
           >
-            <label className="text-sm">
-              <span className="text-xs font-semibold text-muted-foreground">Staff email</span>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
-            >
-              {busy ? "Sending…" : "Send OTP"}
-            </button>
-          </form>
-        ) : (
-          <form
-            className="mt-5 grid gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void confirmOtp();
-            }}
-          >
-            <label className="text-sm">
-              <span className="text-xs font-semibold text-muted-foreground">6-digit OTP</span>
-              <input
-                required
-                inputMode="numeric"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-center text-lg tracking-[0.4em] outline-none focus:border-primary"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={busy || otp.length < 6}
-              className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
-            >
-              {busy ? "Verifying…" : "Enter admin"}
-            </button>
-            <button
-              type="button"
-              className="text-sm text-muted-foreground"
-              onClick={() => {
-                setStep("form");
-                setOtp("");
-              }}
-            >
-              Change email
-            </button>
-          </form>
-        )}
+            {busy ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
       </div>
     </div>
   );

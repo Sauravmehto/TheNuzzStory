@@ -2,10 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
-import { brands, categories, money, productTypes } from "@/data/catalog";
+import { categories, money, productTypes } from "@/data/catalog";
 import { useStore } from "@/store/StoreContext";
 
+type CategorySearch = { type?: string; brand?: string };
+
 export const Route = createFileRoute("/category/$slug")({
+  // Optional deep-link filters, e.g. /category/dog-food?type=Krunch from the home page.
+  validateSearch: (search: Record<string, unknown>): CategorySearch => ({
+    ...(typeof search["type"] === "string" && search["type"] ? { type: search["type"] } : {}),
+    ...(typeof search["brand"] === "string" && search["brand"] ? { brand: search["brand"] } : {}),
+  }),
   loader: ({ params }) => {
     const category = categories.find((c) => c.slug === params.slug);
     if (!category) throw notFound();
@@ -45,11 +52,12 @@ const HOUSE_FOOD_SLUGS = new Set(["dog-food", "cat-food"]);
 
 function CategoryPage() {
   const { category } = Route.useLoaderData();
+  const search = Route.useSearch();
   const { products, catalogLoading } = useStore();
   const [maxPrice, setMaxPrice] = useState(3000);
-  const [brandSel, setBrandSel] = useState<string[]>([]);
+  const [brandSel, setBrandSel] = useState<string[]>(search.brand ? [search.brand] : []);
   const [petSel, setPetSel] = useState<string[]>([]);
-  const [typeSel, setTypeSel] = useState<string[]>([]);
+  const [typeSel, setTypeSel] = useState<string[]>(search.type ? [search.type] : []);
   const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sort, setSort] = useState<(typeof SORTS)[number]["id"]>("popularity");
@@ -64,11 +72,11 @@ function CategoryPage() {
   }, [category.slug, catalogLoading]);
 
   useEffect(() => {
-    setBrandSel([]);
+    setBrandSel(search.brand ? [search.brand] : []);
     setPetSel([]);
-    setTypeSel([]);
+    setTypeSel(search.type ? [search.type] : []);
     setVisible(8);
-  }, [category.slug]);
+  }, [category.slug, search.brand, search.type]);
 
   const inCategory = useMemo(() => {
     let list = products.filter((p) => p.category === category.slug);
@@ -81,7 +89,8 @@ function CategoryPage() {
 
   const availableBrands = useMemo(() => {
     if (HOUSE_FOOD_SLUGS.has(category.slug)) return [HOUSE_BRAND];
-    return brands.filter((b) => inCategory.some((p) => p.brand === b));
+    // Live brands (DB catalog can carry brands the static seed list doesn't know).
+    return [...new Set(inCategory.map((p) => p.brand))].sort();
   }, [category.slug, inCategory]);
 
   const availablePets = useMemo(() => {

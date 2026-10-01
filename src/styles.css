@@ -112,12 +112,16 @@
     border-color: var(--color-border);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   h1,
@@ -168,4 +172,257 @@
 
 @utility animate-promo-marquee {
   animation: promo-marquee 28s linear infinite;
+}
+
+/* Storefront header. Scoped so it does not replace :root --primary. */
+.site-header {
+  --nav-blue: #013f8d;
+  --nav-blue-deep: #01336f;
+  --nav-ink: #122033;
+  --nav-line: rgb(255 255 255 / 0.15);
+  --nav-hover: rgb(255 255 255 / 0.12);
+  --nav-muted: rgb(255 255 255 / 0.75);
+  --nav-drop-border: #e6ebf2;
+  --nav-drop-hover: #f4f7fb;
+  --nav-offer: #ff6d1f;
+  background: var(--nav-blue);
+  color: #fff;
+}
+
+.site-header .nav-item-active::after {
+  content: "";
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.35rem;
+  left: 0.75rem;
+  height: 2px;
+  background: #fff;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-header .nav-item-active[data-active="true"]::after {
+  transform: scaleX(1);
+}
+
+/* Home page only. Does not replace the store --primary token. */
+.home-shell {
+  --home-orange: #ff6d1f;
+  --home-ink: #0f0f0f;
+  --home-text: #222222;
+  --home-muted: #747474;
+  --home-border: #e7e7e7;
+  --home-green: #008b44;
+  --home-cream: #fbcfa5;
+  --home-navy: #102242;
+  --home-bg: #f2f4f8;
+  --home-yellow: #ffc21a;
+  --home-peach: #fdd9bb;
+  --home-peach-soft: #fdebdc;
+  --home-gold: #c9953a;
+  --home-magenta: #c8195f;
+  --home-gutter: 16px;
+  --home-gap: 12px;
+  background: #fff;
+  color: var(--home-text);
+  font-family: Rubik, ui-sans-serif, system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+@media (min-width: 768px) {
+  .home-shell {
+    --home-gutter: 32px;
+    --home-gap: 20px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .home-shell {
+    --home-gutter: 48px;
+    --home-gap: 28px;
+  }
+}
+
+/* Page container: every section shares one width and gutter. */
+.home-wrap {
+  width: 100%;
+  max-width: 1536px;
+  margin-inline: auto;
+  padding-inline: var(--home-gutter);
+}
+
+/* Section titles, reference type scale: 20 → 22 → 26px, medium weight. */
+.home-title {
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 500;
+  color: var(--home-ink);
+}
+
+@media (min-width: 768px) {
+  .home-title {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .home-title {
+    font-size: 26px;
+  }
+}
+
+.home-scroller {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+}
+
+/*
+ * Rail: a swipeable row on phones/tablets that becomes a grid on desktop.
+ * --rail-m / --rail-t = cards visible on mobile / tablet (fractions give the peek),
+ * --rail-cols = desktop columns. data-scroll keeps it a scroller on desktop too.
+ */
+.home-rail {
+  --rail-count: var(--rail-m, 1.5);
+  display: flex;
+  gap: var(--home-gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--home-gutter);
+  margin-inline: calc(var(--home-gutter) * -1);
+  padding-inline: var(--home-gutter);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.home-rail > * {
+  flex: 0 0 calc((100% - (var(--rail-count) - 1) * var(--home-gap)) / var(--rail-count));
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .home-rail {
+    --rail-count: var(--rail-t, 2.5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-rail:not([data-scroll]) {
+    display: grid;
+    grid-template-columns: repeat(var(--rail-cols, 4), minmax(0, 1fr));
+    overflow: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .home-rail[data-scroll] {
+    --rail-count: var(--rail-d, 5);
+  }
+}
+
+/*
+ * Pack shots are shot on white: multiply drops the white so they sit on colour like cut-outs.
+ * The blend only reaches the nearest stacking context, so never put transform/opacity/filter
+ * on a wrapper between the img and its coloured background (transform the img itself).
+ */
+.home-cutout {
+  mix-blend-mode: multiply;
+  object-fit: contain;
+}
+
+/* Shared hover: small lift + image zoom. Only on devices that can hover. */
+@media (hover: hover) {
+  .home-lift {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-lift:hover {
+    transform: translateY(-4px);
+  }
+
+  .home-zoom img {
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-zoom:hover img {
+    transform: scale(1.04);
+  }
+}
+
+/* "Shop now →" caption under cards; arrow nudges on hover. */
+.home-cta-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+a:hover .home-cta-arrow {
+  transform: translateX(3px);
+}
+
+.home-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .home-reveal {
+      animation: home-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 28%;
+    }
+  }
+}
+
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.home-shell h1,
+.home-shell h2,
+.home-shell h3,
+.home-shell h4 {
+  font-family: Rubik, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .site-header .nav-item-active::after,
+  .site-header .mega-menu-panel,
+  .site-header .nav-item-active svg {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .site-header .nav-item-active[data-active="true"]::after {
+    transform: scaleX(1);
+  }
+
+  .home-shell *,
+  .home-shell *::before,
+  .home-shell *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

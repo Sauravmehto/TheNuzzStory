@@ -324,45 +324,20 @@ export interface Database {
         };
         Relationships: [];
       };
-      otp_requests: {
-        Row: {
-          id: string;
-          target_type: "email" | "phone";
-          target_value: string;
-          otp_hash: string;
-          purpose: "signup" | "login";
-          expires_at: string;
-          attempts: number;
-          is_used: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          target_type: "email" | "phone";
-          target_value: string;
-          otp_hash: string;
-          purpose: "signup" | "login";
-          expires_at: string;
-          attempts?: number;
-          is_used?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          target_type?: "email" | "phone";
-          target_value?: string;
-          otp_hash?: string;
-          purpose?: "signup" | "login";
-          expires_at?: string;
-          attempts?: number;
-          is_used?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      place_order: {
+        Args: {
+          p_items: Json;
+          p_payment_method: string;
+          p_address_id: string;
+          p_coupon_code?: string | null;
+          p_redeem_loyalty?: boolean;
+        };
+        Returns: Json;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

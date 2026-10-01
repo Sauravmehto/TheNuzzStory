@@ -13,7 +13,7 @@ import { PawPrint } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { StoreProvider } from "@/store/StoreContext";
-import { Header } from "@/components/Header";
+import { SiteHeader } from "@/components/home/SiteHeader";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
 import { Toaster } from "@/components/ui/sonner";
@@ -103,8 +103,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "The Nuzz Story — Premium Pet Food, Grooming & Care" },
       { name: "twitter:title", content: "The Nuzz Story — Premium Pet Food, Grooming & Care" },
-      { property: "og:description", content: "Vet-reviewed dog & cat food, grooming products, toys and accessories. Free delivery above ₹499, easy returns and in-store grooming." },
-      { name: "twitter:description", content: "Vet-reviewed dog & cat food, grooming products, toys and accessories. Free delivery above ₹499, easy returns and in-store grooming." },
+      {
+        property: "og:description",
+        content:
+          "Vet-reviewed dog & cat food, grooming products, toys and accessories. Free delivery above ₹499, easy returns and in-store grooming.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Vet-reviewed dog & cat food, grooming products, toys and accessories. Free delivery above ₹499, easy returns and in-store grooming.",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -112,7 +120,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Oswald:wght@600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Oswald:wght@600;700&family=Rubik:wght@400;500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.png", type: "image/x-icon" },
       { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "256x256" },
@@ -147,7 +155,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
         <div className="flex min-h-screen flex-col">
-          {!isAdmin && <Header />}
+          {!isAdmin && <SiteHeader />}
           <main className="flex-1">
             <Outlet />
           </main>

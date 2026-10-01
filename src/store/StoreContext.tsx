@@ -8,24 +8,28 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
-import { coupons as staticCoupons, products as staticProducts, STORE, type Coupon, type Product } from "@/data/catalog";
+import {
+  coupons as staticCoupons,
+  products as staticProducts,
+  STORE,
+  type Coupon,
+  type Product,
+} from "@/data/catalog";
 import { fetchCatalogCoupons, fetchCatalogProducts } from "@/lib/catalog-db";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import {
-  addLoyaltyPoints,
-  createOrder,
   deleteAddress,
   fetchAddresses,
   fetchProfile,
   insertAddress,
-  loyaltyPointsForOrder,
+  placeOrderOnServer,
   profileToAppUser,
   signOutSupabase,
   updateProfile,
   upsertProfile,
 } from "@/lib/auth";
 import type { AppUser } from "@/types/database";
-import { WELCOME_LOYALTY_POINTS, maxRedeemRupees, pointsForRupees } from "@/lib/loyalty";
+import { WELCOME_LOYALTY_POINTS, maxRedeemRupees } from "@/lib/loyalty";
 
 export interface CartLine {
   slug: string;
@@ -299,11 +303,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       0,
     );
     const discount = couponDiscount + subDiscount;
-    const deliveryFee = subtotal === 0 || subtotal >= STORE.freeShippingAbove ? 0 : STORE.deliveryFee;
+    const deliveryFee =
+      subtotal === 0 || subtotal >= STORE.freeShippingAbove ? 0 : STORE.deliveryFee;
     const payableBeforeLoyalty = Math.max(0, subtotal - discount + deliveryFee);
     const balance = user?.loyaltyPoints ?? 0;
     const loyaltyDiscount = redeemLoyalty ? maxRedeemRupees(balance, payableBeforeLoyalty) : 0;
-    const pointsRedeemed = pointsForRupees(loyaltyDiscount);
     const total = Math.max(0, payableBeforeLoyalty - loyaltyDiscount);
 
     return {
@@ -340,9 +344,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setCart((prev) => {
           const existing = prev.find((l) => l.slug === p.slug && l.variant === v);
           if (existing) {
-            return prev.map((l) =>
-              l === existing ? { ...l, qty: l.qty + qty, subscription } : l,
-            );
+            return prev.map((l) => (l === existing ? { ...l, qty: l.qty + qty, subscription } : l));
           }
           return [...prev, { slug: p.slug, variant: v, qty, subscription, unitPrice }];
         });
@@ -419,68 +421,48 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           toast.error("Please login before placing an order");
           throw new Error("Not authenticated");
         }
-        const addr = addresses.find((a) => a.id === addressId);
-        if (!addr) {
+        if (!addresses.some((a) => a.id === addressId)) {
           toast.error("Select a delivery address");
           throw new Error("No address");
         }
-
-        const id = `NZ-${Math.floor(20000 + Math.random() * 90000)}`;
-        const items = cart.map((l) => {
-          const p = products.find((x) => x.slug === l.slug);
-          return {
-            product_slug: l.slug,
-            product_name: p?.name ?? l.slug,
-            variant: l.variant,
-            qty: l.qty,
-            unit_price: l.unitPrice,
-            image_url: typeof p?.image === "string" ? p.image : "",
-          };
-        });
-
-        await createOrder({
-          userId: user.id,
-          orderId: id,
-          subtotal,
-          discount: discount + loyaltyDiscount,
-          deliveryFee,
-          total,
-          paymentMethod,
-          shippingName: addr.name,
-          shippingPhone: addr.phone,
-          shippingAddress: `${addr.address}, ${addr.landmark}, ${addr.city}, ${addr.state} — ${addr.pincode}`,
-          items,
-        });
-
-        let nextBalance = user.loyaltyPoints;
-        if (pointsRedeemed > 0) {
-          try {
-            nextBalance = await addLoyaltyPoints(user.id, -pointsRedeemed);
-            setUser({ ...user, loyaltyPoints: nextBalance });
-            toast.success(`Redeemed ${pointsRedeemed} points`, {
-              description: `${moneyish(loyaltyDiscount)} off this order`,
-            });
-          } catch (err) {
-            console.error(err);
-          }
+        if (paymentMethod === "cod" && total > STORE.codLimit) {
+          toast.error(`Cash on delivery is available on orders up to ₹${STORE.codLimit}`);
+          throw new Error("COD limit");
         }
 
-        const earned = loyaltyPointsForOrder(total);
         try {
-          nextBalance = await addLoyaltyPoints(user.id, earned);
-          setUser({ ...user, loyaltyPoints: nextBalance });
-          toast.success(`+${earned} Paw Points`, {
-            description: `Added to loyalty · balance ${nextBalance}`,
+          const result = await placeOrderOnServer({
+            items: cart.map((l) => ({
+              slug: l.slug,
+              variant: l.variant,
+              qty: l.qty,
+              subscription: l.subscription,
+            })),
+            paymentMethod,
+            addressId,
+            couponCode: coupon?.code ?? null,
+            redeemLoyalty,
           });
-        } catch (err) {
-          console.error(err);
-        }
 
-        setLastOrderId(id);
-        setCart([]);
-        setCoupon(null);
-        setRedeemLoyalty(false);
-        return id;
+          setUser({ ...user, loyaltyPoints: result.loyalty_balance });
+          if (result.points_redeemed > 0) {
+            toast.success(`Redeemed ${result.points_redeemed} points`, {
+              description: `${moneyish(result.loyalty_discount)} off this order`,
+            });
+          }
+          toast.success(`+${result.points_earned} Paw Points`, {
+            description: `Added to loyalty · balance ${result.loyalty_balance}`,
+          });
+          setLastOrderId(result.order_id);
+          setCart([]);
+          setCoupon(null);
+          setRedeemLoyalty(false);
+          return result.order_id;
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Could not place the order";
+          toast.error(message);
+          throw err;
+        }
       },
     };
   }, [
@@ -497,6 +479,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     products,
     coupons,
     redeemLoyalty,
+    catalogLoading,
   ]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
