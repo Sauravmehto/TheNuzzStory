@@ -29,7 +29,7 @@ export function MainHeader({ onMenu }: { onMenu: () => void }) {
   }, [products, query]);
 
   return (
-    <div className="flex items-center gap-2 px-4 py-3 md:gap-3 md:px-5 lg:gap-4 lg:px-[62px]">
+    <div className="relative flex items-center gap-2 px-4 py-3 md:gap-3 md:px-5 lg:gap-4 lg:px-[62px]">
       <button
         type="button"
         className={cn(
@@ -46,10 +46,13 @@ export function MainHeader({ onMenu }: { onMenu: () => void }) {
         </span>
       </button>
 
-      <BrandLockup compact />
+      <BrandLockup
+        compact
+        className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0"
+      />
 
       <form
-        className="relative min-w-0 flex-1"
+        className="relative hidden min-w-0 md:block md:min-w-0 md:flex-1"
         onSubmit={(e) => {
           e.preventDefault();
           const first = hits[0];
@@ -146,37 +149,39 @@ export function MainHeader({ onMenu }: { onMenu: () => void }) {
         )}
       </div>
 
-      <Link
-        to="/account/wishlist"
-        aria-label={`Wishlist, ${wishlist.length} items`}
-        className={cn(
-          "relative grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-[var(--nav-hover)]",
-          homeFocus,
-        )}
-      >
-        <Heart size={20} />
-        {wishlist.length > 0 && (
-          <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--nav-offer)] px-1 text-[10px] font-bold text-white">
-            {wishlist.length}
-          </span>
-        )}
-      </Link>
-      <button
-        type="button"
-        aria-label={`Open cart, ${cartCount} items`}
-        onClick={() => setCartOpen(true)}
-        className={cn(
-          "relative grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-[var(--nav-hover)]",
-          homeFocus,
-        )}
-      >
-        <ShoppingCart size={20} />
-        {cartCount > 0 && (
-          <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--nav-offer)] px-1 text-[10px] font-bold text-white">
-            {cartCount}
-          </span>
-        )}
-      </button>
+      <div className="ml-auto flex items-center md:ml-0">
+        <Link
+          to="/account/wishlist"
+          aria-label={`Wishlist, ${wishlist.length} items`}
+          className={cn(
+            "relative grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-[var(--nav-hover)]",
+            homeFocus,
+          )}
+        >
+          <Heart size={20} />
+          {wishlist.length > 0 && (
+            <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--nav-offer)] px-1 text-[10px] font-bold text-white">
+              {wishlist.length}
+            </span>
+          )}
+        </Link>
+        <button
+          type="button"
+          aria-label={`Open cart, ${cartCount} items`}
+          onClick={() => setCartOpen(true)}
+          className={cn(
+            "relative grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-[var(--nav-hover)]",
+            homeFocus,
+          )}
+        >
+          <ShoppingCart size={20} />
+          {cartCount > 0 && (
+            <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--nav-offer)] px-1 text-[10px] font-bold text-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
+      </div>
       <Link
         to={user ? "/account/profile" : "/account/login"}
         aria-label={user ? "Account" : "Log in"}
