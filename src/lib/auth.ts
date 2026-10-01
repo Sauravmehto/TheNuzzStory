@@ -4,71 +4,81 @@ import type { AddressRow, AppUser, OrderItemRow, OrderRow, Profile } from "@/typ
 
 export { isSupabaseConfigured, loyaltyPointsForOrder };
 
-export async function sendEmailOtp(params: {
+const notConfigured = () =>
+  new Error("Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env");
+
+export async function signUpWithEmail(params: {
   email: string;
-  name?: string;
-  phone?: string;
-  createUser: boolean;
+  password: string;
+  name: string;
+  phone: string;
 }) {
   if (!isSupabaseConfigured) {
-    return { error: new Error("Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env") };
+    return { data: null, error: notConfigured() };
   }
 
-  const email = params.email.trim().toLowerCase();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
+  const { data, error } = await supabase.auth.signUp({
+    email: params.email.trim().toLowerCase(),
+    password: params.password,
     options: {
-      shouldCreateUser: params.createUser,
       data: {
-        full_name: params.name?.trim() ?? "",
-        phone: params.phone?.trim() ?? "",
+        full_name: params.name.trim(),
+        phone: params.phone.trim(),
       },
     },
   });
 
-  if (error) {
-    const msg = error.message.toLowerCase();
-    if (msg.includes("rate limit") || msg.includes("over_email")) {
-      return {
-        error: new Error(
-          "Email rate limit exceeded. Wait ~1 hour, or use the custom OTP flow (server console).",
-        ),
-      };
-    }
+  if (!error && data.user && (data.user.identities?.length ?? 0) === 0) {
+    return {
+      data: null,
+      error: new Error("An account with this email already exists. Try logging in."),
+    };
   }
 
+  if (error && isPhoneAlreadyRegistered(error.message)) {
+    return { data: null, error: new Error("This phone number is already registered") };
+  }
+
+  return { data, error };
+}
+
+function isPhoneAlreadyRegistered(message: string): boolean {
+  const msg = message.toLowerCase();
+  return (
+    msg.includes("phone number is already registered") ||
+    msg.includes("profiles_phone") ||
+    (msg.includes("duplicate") && msg.includes("phone"))
+  );
+}
+
+export async function signInWithEmail(email: string, password: string) {
+  if (!isSupabaseConfigured) {
+    return { data: null, error: notConfigured() };
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  return { data, error };
+}
+
+export async function requestPasswordReset(email: string, redirectTo: string) {
+  if (!isSupabaseConfigured) {
+    return { error: notConfigured() };
+  }
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo,
+  });
   return { error };
 }
 
-export async function verifyEmailOtp(
-  email: string,
-  token: string,
-  options?: { isSignup?: boolean },
-) {
+export async function updatePassword(password: string) {
   if (!isSupabaseConfigured) {
-    return { data: null, error: new Error("Supabase is not configured") };
+    return { error: notConfigured() };
   }
-
-  const normalizedEmail = email.trim().toLowerCase();
-  const normalizedToken = token.trim();
-
-  // Signup confirmation often needs type "signup"; login OTP uses "email".
-  const types = options?.isSignup
-    ? (["signup", "email"] as const)
-    : (["email", "signup"] as const);
-
-  let lastError: Error | null = null;
-  for (const type of types) {
-    const { data, error } = await supabase.auth.verifyOtp({
-      email: normalizedEmail,
-      token: normalizedToken,
-      type,
-    });
-    if (!error && data?.user) return { data, error: null };
-    if (error) lastError = error;
-  }
-
-  return { data: null, error: lastError ?? new Error("Invalid OTP") };
+  const { error } = await supabase.auth.updateUser({ password });
+  return { error };
 }
 
 export async function signOutSupabase() {
@@ -76,22 +86,12 @@ export async function signOutSupabase() {
   await supabase.auth.signOut();
 }
 
-export async function applySupabaseSession(tokens: {
-  access_token: string;
-  refresh_token: string;
-}) {
-  if (!isSupabaseConfigured) {
-    return { error: new Error("Supabase is not configured") };
-  }
-  const { error } = await supabase.auth.setSession({
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
-  });
-  return { error };
-}
-
 export async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -127,18 +127,10 @@ export async function upsertProfile(user: AppUser) {
   return data;
 }
 
-export async function addLoyaltyPoints(userId: string, points: number): Promise<number> {
-  const profile = await fetchProfile(userId);
-  const next = Math.max(0, profileLoyaltyPoints(profile) + points);
-  const { error } = await supabase
-    .from("profiles")
-    .update({ loyalty_points: next, updated_at: new Date().toISOString() })
-    .eq("id", userId);
-  if (error) throw error;
-  return next;
-}
-
-export async function updateProfile(userId: string, patch: Partial<Pick<Profile, "name" | "phone">>) {
+export async function updateProfile(
+  userId: string,
+  patch: Partial<Pick<Profile, "name" | "phone">>,
+) {
   const { error } = await supabase
     .from("profiles")
     .update({ ...patch, updated_at: new Date().toISOString() })
@@ -170,11 +162,17 @@ export async function insertAddress(
 }
 
 export async function deleteAddress(userId: string, addressId: string) {
-  const { error } = await supabase.from("addresses").delete().eq("id", addressId).eq("user_id", userId);
+  const { error } = await supabase
+    .from("addresses")
+    .delete()
+    .eq("id", addressId)
+    .eq("user_id", userId);
   if (error) throw error;
 }
 
-export async function fetchOrders(userId: string): Promise<(OrderRow & { items: OrderItemRow[] })[]> {
+export async function fetchOrders(
+  userId: string,
+): Promise<(OrderRow & { items: OrderItemRow[] })[]> {
   const { data: orders, error } = await supabase
     .from("orders")
     .select("*")
@@ -184,7 +182,10 @@ export async function fetchOrders(userId: string): Promise<(OrderRow & { items: 
   if (!orders?.length) return [];
 
   const ids = orders.map((o) => o.id);
-  const { data: items, error: itemsError } = await supabase.from("order_items").select("*").in("order_id", ids);
+  const { data: items, error: itemsError } = await supabase
+    .from("order_items")
+    .select("*")
+    .in("order_id", ids);
   if (itemsError) throw itemsError;
 
   return orders.map((o) => ({
@@ -215,48 +216,35 @@ export async function fetchOrderById(
   return { ...order, items: items ?? [] };
 }
 
-export async function createOrder(input: {
-  userId: string;
-  orderId: string;
-  status?: string;
+export type PlaceOrderResult = {
+  order_id: string;
   subtotal: number;
   discount: number;
-  deliveryFee: number;
+  delivery_fee: number;
+  cod_fee: number;
+  loyalty_discount: number;
   total: number;
+  points_earned: number;
+  points_redeemed: number;
+  loyalty_balance: number;
+};
+
+export async function placeOrderOnServer(input: {
+  items: Array<{ slug: string; variant: string; qty: number; subscription: boolean }>;
   paymentMethod: string;
-  shippingName: string;
-  shippingPhone: string;
-  shippingAddress: string;
-  items: Array<{
-    product_slug: string;
-    product_name: string;
-    variant: string;
-    qty: number;
-    unit_price: number;
-    image_url: string;
-  }>;
-}) {
-  const { error } = await supabase.from("orders").insert({
-    id: input.orderId,
-    user_id: input.userId,
-    status: input.status ?? "Processing",
-    subtotal: input.subtotal,
-    discount: input.discount,
-    delivery_fee: input.deliveryFee,
-    total: input.total,
-    payment_method: input.paymentMethod,
-    shipping_name: input.shippingName,
-    shipping_phone: input.shippingPhone,
-    shipping_address: input.shippingAddress,
+  addressId: string;
+  couponCode: string | null;
+  redeemLoyalty: boolean;
+}): Promise<PlaceOrderResult> {
+  const { data, error } = await supabase.rpc("place_order", {
+    p_items: input.items,
+    p_payment_method: input.paymentMethod,
+    p_address_id: input.addressId,
+    p_coupon_code: input.couponCode,
+    p_redeem_loyalty: input.redeemLoyalty,
   });
   if (error) throw error;
-
-  if (input.items.length) {
-    const { error: itemsError } = await supabase.from("order_items").insert(
-      input.items.map((item) => ({ ...item, order_id: input.orderId })),
-    );
-    if (itemsError) throw itemsError;
-  }
+  return data as PlaceOrderResult;
 }
 
 export function profileToAppUser(profile: Profile): AppUser {
