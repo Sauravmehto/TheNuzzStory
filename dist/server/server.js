@@ -92,7 +92,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-CeSrI8ww.js");
+	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-c47ADNNy.js");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -116,131 +116,95 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"089fa91e0e7a7dd926830e349264959ba7c5b017ea539ea94f695a223e71eef8": {
 		functionName: "listAdminOrders_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
-	},
-	"1031b6a6156af529eb96ab8cc6c3ff2c6dcbf6bfb0a1f4b686a6ceba4ff4b55e": {
-		functionName: "checkLoginIdentifier_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"16fafd27d8025fdeb96230d8420d49215fc1a28228092b1f93f9dc9a0f381876": {
 		functionName: "deleteAdminProduct_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
-	},
-	"19193ef29ac313da8a4d566c443c6d2d4b6718a2ea4bcd8f125a17ebfdd59a5b": {
-		functionName: "startEmailSignup_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"1a766845e9bfd4fa2dfdd9217e905c7dfdd549cc17926d6ed4295172a6cf492b": {
 		functionName: "getAdminUser_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"240a888f657a18f4decefc9bcd56aa1dbccfa35f895b06750de2c822ecd3a616": {
 		functionName: "getAdminReports_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"2f3b336c5f991757ff2dc438e7f1883582f8e61e7a62f2ef75cfeac94062a8fc": {
 		functionName: "updateAdminOrderStatus_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
-	},
-	"2fdaaa87f4c1bbbb0c334beea72dce018724f6c4f12898deac804e33fb312ad6": {
-		functionName: "startEmailLogin_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"36f8c275197ebfd12f84219018b0e9bbfd206e29b982f9620818e2a7eece345a": {
 		functionName: "upsertAdminCoupon_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"3a8072040cbde7e8a726fd1b40b2ccc5321ee3c9e7fec9a36204b44794c7300f": {
 		functionName: "updateAdminCustomer_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"3f9d2ffddb0de4cccd25e204162c63e22b672fada823802c680f2c18522141e9": {
 		functionName: "getAdminOrder_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"4bc67c0134bbf69aa883243bcb598f7a0a2583cae6df7ea51fe4b499b96e3ff9": {
 		functionName: "promoteUserByEmail_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
-	},
-	"504bdfbc15aa4adebef07904a4271120e93a85b2f7ee72bfc4dc8edbd2509f64": {
-		functionName: "verifyEmailSignup_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
-	},
-	"51333916b8cbc887baca5c890374b8ed23ef5bbfed8f3af789033ac6d6b14458": {
-		functionName: "validateSignup_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"54396c0d48269654ad585833821ff0af227bc31fc9a278596a11d5f71f73d34c": {
 		functionName: "getAdminProduct_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"61fbbeeb6fb5eb2ef03de68295ce48cae8a43dd890fcced009644a4dac0e4262": {
 		functionName: "deleteAdminCustomer_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"624dda450a197b6671432529c3e7ee9ef75d3f2e48929a960066b27bff2fd0a6": {
 		functionName: "seedCatalogFromStatic_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"6c1df528347f13f13c912311059de94c2794bb311e7cb6f13c6341b34b64abfd": {
 		functionName: "listAuditLog_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"70e20e2c8a20cc43fa05736f919f61aa41a21a7510ce37a8092d90a727948fab": {
 		functionName: "updateAdminStaff_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
-	},
-	"76aa430e79abe3487ee16fdf661ba7f20ff81f55c369f56f1d13a27d4cf570da": {
-		functionName: "verifyDevAdminLogin_createServerFn_handler",
-		importer: () => import("./assets/dev-admin-8Jc2g9e0.js")
-	},
-	"7d88c2b36d2a9457f6a70d9c760f3f2feb8dae795d360c67de4232cf16aaeb92": {
-		functionName: "verifyEmailLogin_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
-	},
-	"8de23f63be456b522d70b512c214cb0d577d13c34e720b231674767b0c33574c": {
-		functionName: "verifyPhoneLogin_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"9050f0835b69df240c331fc57faeeb87cfa1bd7c2fe15d9a7d121ad0437fba1f": {
 		functionName: "listAdminStaff_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"90e5bcedbfdb9e3bb208687e55db715e77514d3a301a8085eb755f5b21df5293": {
 		functionName: "getPermissionsMatrix_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
-	},
-	"92d652fd8652a98bf0248244122b6de376d97792b8c35794d6d0c4d73137b1e1": {
-		functionName: "startPhoneLogin_createServerFn_handler",
-		importer: () => import("./assets/custom-auth-bGCZBnWb.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"96fbd681b9639947a0f004911b6a3d8c6765d98e2d9a2962d9cbad03a1b88d09": {
 		functionName: "savePermissionsMatrix_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"a1fe58f2b43dd55365d1ebda350cbb10f4297bd7832c118003fb73b48714c693": {
 		functionName: "upsertAdminProduct_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"b5f136c19f5b8e57693f41835cbd0596d76899e444c52e8e2256d99f166d664e": {
 		functionName: "listAdminUsers_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"bbf374cdb00ffe214fa6c1d2c99b82c3b459419dce186882878d5b5e576a7c19": {
 		functionName: "getAdminSession_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"c73e9e0c3a6082206bc829aac2e66b497a15d33b3c41798c87111df1b8a19426": {
 		functionName: "listAdminCoupons_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	},
 	"c9974c8cde5128f97f2b90ec882f623d717ff42f8132d49bbcfa68db28099139": {
 		functionName: "getAdminDashboardStats_createServerFn_handler",
-		importer: () => import("./assets/admin-CyGLL-em.js")
+		importer: () => import("./assets/admin-CYoUNWOK.js")
 	},
 	"cf1382c6e4ea5681598d0e61585745ced86660535c555b65c7c67a067256c134": {
 		functionName: "listAdminProducts_createServerFn_handler",
-		importer: () => import("./assets/catalog-BZ8fvtai.js")
+		importer: () => import("./assets/catalog-6B_8MJwc.js")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1461,7 +1425,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./assets/router-Cn9sBPaq.js").then((n) => n.t),
+		import("./assets/router-qWL6gFKw.js").then((n) => n.t),
 		import("./assets/start-BFDLqOyY.js"),
 		import("./assets/empty-plugin-adapters-D9UWiqvJ.js")
 	]);
