@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Cat, Dog, PawPrint, type LucideIcon } from "lucide-react";
 import { AppNotice } from "@/components/home/AppBanner";
 import { BrandFeature } from "@/components/home/BrandFeature";
 import { BrandLogos } from "@/components/home/BrandLogos";
@@ -46,26 +47,43 @@ function usePetFilter() {
   return value;
 }
 
+const petOptions: Array<{ id: PetFilter; label: string; icon: LucideIcon }> = [
+  { id: "all", label: "All", icon: PawPrint },
+  { id: "dog", label: "Dogs", icon: Dog },
+  { id: "cat", label: "Cats", icon: Cat },
+];
+
 function PetPills() {
   const { pet, setPet } = usePetFilter();
   return (
-    <div className="flex gap-2 px-4 pt-3 md:hidden">
-      {(["all", "dog", "cat"] as const).map((id) => (
-        <button
-          key={id}
-          type="button"
-          onClick={() => setPet(id)}
-          className={cn(
-            "rounded-full px-4 py-1.5 text-sm font-medium",
-            homeFocus,
-            pet === id
-              ? "bg-[var(--home-orange)] text-white shadow-md"
-              : "bg-[var(--home-bg)] text-[var(--home-text)]",
-          )}
-        >
-          {id === "all" ? "All" : id === "dog" ? "Dogs" : "Cats"}
-        </button>
-      ))}
+    <div className="px-4 pt-3 md:hidden">
+      <div
+        className="grid grid-cols-3 gap-1 rounded-2xl bg-white p-1 shadow-sm"
+        role="group"
+        aria-label="Filter by pet"
+      >
+        {petOptions.map(({ id, label, icon: Icon }) => {
+          const selected = pet === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => setPet(id)}
+              className={cn(
+                "inline-flex h-11 items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-colors duration-200 active:scale-[0.98]",
+                homeFocus,
+                selected
+                  ? "bg-[var(--home-orange)] text-white shadow-sm"
+                  : "text-[var(--home-text)]",
+              )}
+            >
+              <Icon size={16} strokeWidth={2} aria-hidden />
+              {label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
