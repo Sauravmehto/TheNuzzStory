@@ -5,6 +5,9 @@
 [build.environment]
   NODE_VERSION = "22"
   NPM_FLAGS = "--no-fund --no-audit"
+  # Supabase URL + publishable/anon key are public by design (shipped to the browser,
+  # protected by RLS). Skip them in secret scanning; SUPABASE_SECRET_KEY is still scanned.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,SUPABASE_URL,SUPABASE_JWKS_URL,SUPABASE_PUBLISHABLE_KEY,VITE_SUPABASE_PUBLISHABLE_KEY,VITE_SUPABASE_ANON_KEY"
 
 # Set these in Netlify UI → Site settings → Environment variables:
 # VITE_SUPABASE_URL
